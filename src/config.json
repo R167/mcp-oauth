@@ -1,0 +1,28 @@
+{
+  "servers": [
+    {
+      "domain": "example.com",
+      "server": "filesystem",
+      "allowed_users": ["alice", "bob"],
+      "description": "File system access for development environment"
+    },
+    {
+      "domain": "example.com", 
+      "server": "database",
+      "allowed_users": ["alice", "charlie"],
+      "description": "Database access for data analysis"
+    },
+    {
+      "domain": "api.acme.com",
+      "server": "inventory",
+      "allowed_users": ["alice"],
+      "description": "Inventory management system access"
+    },
+    {
+      "domain": "dev.acme.com",
+      "server": "testing",
+      "allowed_users": ["alice", "bob", "charlie", "diana"],
+      "description": "Testing environment access for all team members"
+    }
+  ]
+}
