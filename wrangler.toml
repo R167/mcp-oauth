@@ -1,6 +1,9 @@
 name = "mcp-oauth-worker"
 main = "src/index.ts"
-compatibility_date = "2024-10-01"
+compatibility_date = "2025-08-16"
+
+[observability]
+enabled = true
 
 [env.production.vars]
 GITHUB_CLIENT_ID = ""
