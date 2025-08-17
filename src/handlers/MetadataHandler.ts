@@ -6,7 +6,7 @@ const app = new Hono<{ Bindings: Env }>();
 
 // OAuth 2.0 Authorization Server Metadata (RFC 8414)
 app.get("/.well-known/oauth-authorization-server", (c) => {
-  const baseUrl = c.env.WORKER_BASE_URL;
+  const baseUrl = c.env.WORKER_BASE_URL || "";
 
   return c.json({
     issuer: baseUrl,
@@ -26,7 +26,7 @@ app.get("/.well-known/oauth-authorization-server", (c) => {
 
 // OpenID Connect Discovery (optional, for compatibility)
 app.get("/.well-known/openid_configuration", (c) => {
-  const baseUrl = c.env.WORKER_BASE_URL;
+  const baseUrl = c.env.WORKER_BASE_URL || "";
 
   return c.json({
     issuer: baseUrl,
@@ -46,7 +46,7 @@ app.get("/.well-known/openid_configuration", (c) => {
 // JSON Web Key Set (JWKS)
 app.get("/.well-known/jwks.json", async (c) => {
   try {
-    const jwtManager = new JWTManager(c.env.JWT_PRIVATE_KEY, c.env.JWT_PUBLIC_KEY, c.env.WORKER_BASE_URL);
+    const jwtManager = new JWTManager(c.env.JWT_PRIVATE_KEY, c.env.JWT_PUBLIC_KEY, c.env.WORKER_BASE_URL || "");
 
     const jwks = await jwtManager.getJWKS();
     return c.json(jwks);

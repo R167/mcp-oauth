@@ -23,7 +23,7 @@ export class StorageManager {
         await this.db.prepare(statement).run();
       } catch (error) {
         // Ignore errors for indexes that already exist
-        if (!error.message?.includes("already exists")) {
+        if (!(error as Error).message?.includes("already exists")) {
           console.error("Failed to create table/index:", statement, error);
         }
       }

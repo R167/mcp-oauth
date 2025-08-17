@@ -130,7 +130,11 @@ Use the provided script to easily configure all required secrets:
 ./scripts/setup-secrets.sh prod
 ```
 
-The script will prompt you for all required values and set them automatically.
+The script will:
+- Prompt for GitHub OAuth credentials
+- Auto-generate JWT key pair (or accept manual input)
+- Auto-generate refresh token encryption key (or accept manual input)
+- Configure all secrets automatically
 
 ## Usage
 

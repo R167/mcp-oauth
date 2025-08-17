@@ -27,7 +27,7 @@ app.post("/token", async (c) => {
     const storage = new StorageManager(c.env.AUTH_DB);
     await storage.initialize();
 
-    const jwtManager = new JWTManager(c.env.JWT_PRIVATE_KEY, c.env.JWT_PUBLIC_KEY, c.env.WORKER_BASE_URL);
+    const jwtManager = new JWTManager(c.env.JWT_PRIVATE_KEY, c.env.JWT_PUBLIC_KEY, c.env.WORKER_BASE_URL || "");
 
     if (request.grant_type === "authorization_code") {
       return handleAuthorizationCodeGrant(request, storage, jwtManager, c.env);

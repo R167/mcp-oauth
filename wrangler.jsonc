@@ -11,24 +11,25 @@
 			"database_id": "75738165-47de-4d12-a466-5f579428ce33"
 		}
 	],
-	"routes": [
-		{
-			"pattern": "auth.mcp.r167.dev",
-			"custom_domain": true
-		}
-	],
 	"observability": {
 		"enabled": true
 	},
 	"dev": {
 		"port": 8787
 	},
+	"routes": [
+		{
+			"pattern": "auth.mcp.r167.dev",
+			"custom_domain": true
+		}
+	],
 	"vars": {
 		"WORKER_BASE_URL": "https://auth.mcp.r167.dev"
 	},
 	"env": {
 		"staging": {
 			"name": "mcp-oauth-authorization-server-staging",
+			"routes": [],
 			"vars": {
 				"WORKER_BASE_URL": "https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev"
 			},

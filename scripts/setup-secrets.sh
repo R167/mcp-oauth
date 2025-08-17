@@ -31,19 +31,57 @@ read -rs GITHUB_CLIENT_SECRET
 echo "$GITHUB_CLIENT_SECRET" | wrangler secret put GITHUB_CLIENT_SECRET $ENV_FLAG
 
 echo "🔑 Setting JWT keys..."
-echo "Enter the JWT Private Key (including -----BEGIN/END PRIVATE KEY----- lines):"
-echo "Paste the key, then press Ctrl+D when done:"
-JWT_PRIVATE_KEY=$(cat)
-echo "$JWT_PRIVATE_KEY" | wrangler secret put JWT_PRIVATE_KEY $ENV_FLAG
+echo "Would you like to generate new JWT keys automatically? (y/n) [y]:"
+read -r GENERATE_KEYS
+GENERATE_KEYS=${GENERATE_KEYS:-y}
 
-echo "Enter the JWT Public Key (including -----BEGIN/END PUBLIC KEY----- lines):"
-echo "Paste the key, then press Ctrl+D when done:"
-JWT_PUBLIC_KEY=$(cat)
+if [ "$GENERATE_KEYS" = "y" ] || [ "$GENERATE_KEYS" = "Y" ]; then
+    echo "Generating RSA key pair..."
+    
+    # Create temporary files
+    TEMP_PRIVATE=$(mktemp)
+    TEMP_PUBLIC=$(mktemp)
+    
+    # Generate RSA private key
+    openssl genrsa -out "$TEMP_PRIVATE" 2048
+    
+    # Extract public key
+    openssl rsa -in "$TEMP_PRIVATE" -pubout -out "$TEMP_PUBLIC"
+    
+    # Read the keys
+    JWT_PRIVATE_KEY=$(cat "$TEMP_PRIVATE")
+    JWT_PUBLIC_KEY=$(cat "$TEMP_PUBLIC")
+    
+    # Clean up temp files
+    rm "$TEMP_PRIVATE" "$TEMP_PUBLIC"
+    
+    echo "✅ Generated new RSA key pair"
+else
+    echo "Enter the JWT Private Key (including -----BEGIN/END PRIVATE KEY----- lines):"
+    echo "Paste the key, then press Ctrl+D when done:"
+    JWT_PRIVATE_KEY=$(cat)
+    
+    echo "Enter the JWT Public Key (including -----BEGIN/END PUBLIC KEY----- lines):"
+    echo "Paste the key, then press Ctrl+D when done:"
+    JWT_PUBLIC_KEY=$(cat)
+fi
+
+echo "$JWT_PRIVATE_KEY" | wrangler secret put JWT_PRIVATE_KEY $ENV_FLAG
 echo "$JWT_PUBLIC_KEY" | wrangler secret put JWT_PUBLIC_KEY $ENV_FLAG
 
 echo "🔐 Setting refresh token encryption key..."
-echo "Enter the base64-encoded refresh token encryption key:"
-read -r REFRESH_ENCRYPTION_KEY
+echo "Would you like to generate a new encryption key automatically? (y/n) [y]:"
+read -r GENERATE_ENCRYPTION_KEY
+GENERATE_ENCRYPTION_KEY=${GENERATE_ENCRYPTION_KEY:-y}
+
+if [ "$GENERATE_ENCRYPTION_KEY" = "y" ] || [ "$GENERATE_ENCRYPTION_KEY" = "Y" ]; then
+    REFRESH_ENCRYPTION_KEY=$(openssl rand -base64 32)
+    echo "✅ Generated new encryption key: $REFRESH_ENCRYPTION_KEY"
+else
+    echo "Enter the base64-encoded refresh token encryption key:"
+    read -r REFRESH_ENCRYPTION_KEY
+fi
+
 echo "$REFRESH_ENCRYPTION_KEY" | wrangler secret put REFRESH_ENCRYPTION_KEY $ENV_FLAG
 
 echo "ℹ️  WORKER_BASE_URL is configured as environment variable:"
