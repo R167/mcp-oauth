@@ -120,6 +120,8 @@ wrangler secret put REFRESH_ENCRYPTION_KEY
 pnpm run deploy:prod
 ```
 
+**Note**: Production uses explicit `--env production` environment to avoid warnings.
+
 ## Database Setup
 
 ### Automatic Table Creation

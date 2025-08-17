@@ -18,7 +18,7 @@ echo "Setting up secrets for $ENVIRONMENT environment..."
 if [ "$ENVIRONMENT" = "staging" ]; then
     ENV_FLAG="--env staging"
 else
-    ENV_FLAG=""
+    ENV_FLAG="--env production"
 fi
 
 echo "📝 Setting GitHub OAuth credentials..."
