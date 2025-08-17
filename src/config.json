@@ -1,23 +1,18 @@
 {
-	"servers": {
-		"example.com": {
-			"github-tools": {
-				"name": "GitHub Tools",
-				"description": "Access to GitHub repositories and issues",
-				"allowed_users": ["example-user"]
-			},
-			"data-analysis": {
-				"name": "Data Analysis Tools", 
-				"description": "Tools for data processing and analysis",
-				"allowed_users": ["data-analyst", "admin"]
-			}
-		},
-		"mycompany.com": {
-			"internal-api": {
-				"name": "Internal API Access",
-				"description": "Access to internal company APIs",
-				"allowed_users": ["employee1", "employee2"]
-			}
-		}
-	}
+  "servers": {
+    "tailscale.mcp.r167.dev": {
+      "github-tools": {
+        "name": "GitHub Tools",
+        "description": "Access to GitHub repositories and issues",
+        "allowed_users": ["example-user"]
+      }
+    },
+    "mycompany.com": {
+      "internal-api": {
+        "name": "Internal API Access",
+        "description": "Access to internal company APIs",
+        "allowed_users": ["employee1", "employee2"]
+      }
+    }
+  }
 }

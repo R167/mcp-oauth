@@ -1,0 +1,28 @@
+# TODO Items for Human
+
+## Production Deployment Setup
+- [ ] Configure production secrets by running: `./scripts/setup-secrets.sh prod`
+  - GitHub OAuth Client ID and Secret (create production GitHub OAuth app)
+  - JWT Private/Public keys (generate with OpenSSL)
+  - Refresh token encryption key (AES-256)
+  - Worker base URL (defaults to https://auth.mcp.r167.dev)
+
+## GitHub OAuth App Setup
+- [ ] Create production GitHub OAuth app with callback URL: `https://auth.mcp.r167.dev/auth/github/callback`
+
+## DNS/Domain Configuration
+- [ ] Ensure auth.mcp.r167.dev domain is properly configured in Cloudflare
+- [ ] Verify custom domain routes to the worker (may take time for DNS propagation)
+
+## Configuration
+- [ ] Update `src/config.json` with production MCP servers and allowed users
+
+## Testing
+- [ ] After secrets are configured, test: `curl https://auth.mcp.r167.dev/health`
+- [ ] Verify OAuth flow works end-to-end
+
+## Notes
+- Production worker is deployed and ready
+- Worker will return 404s until secrets are configured
+- Custom domain: https://auth.mcp.r167.dev
+- Fallback URL: https://mcp-oauth-authorization-server.wmdurand.workers.dev

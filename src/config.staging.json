@@ -1,16 +1,16 @@
 {
-	"servers": {
-		"staging-example.com": {
-			"github-tools": {
-				"name": "GitHub Tools (Staging)",
-				"description": "Access to GitHub repositories and issues in staging environment",
-				"allowed_users": ["your-github-username"]
-			},
-			"data-analysis": {
-				"name": "Data Analysis Tools (Staging)", 
-				"description": "Tools for data processing and analysis in staging",
-				"allowed_users": ["your-github-username"]
-			}
-		}
-	}
+  "servers": {
+    "staging-example.com": {
+      "github-tools": {
+        "name": "GitHub Tools (Staging)",
+        "description": "Access to GitHub repositories and issues in staging environment",
+        "allowed_users": ["your-github-username"]
+      },
+      "data-analysis": {
+        "name": "Data Analysis Tools (Staging)",
+        "description": "Tools for data processing and analysis in staging",
+        "allowed_users": ["your-github-username"]
+      }
+    }
+  }
 }
