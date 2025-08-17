@@ -22,7 +22,7 @@ For understanding MCP flow, download https://modelcontextprotocol.io/specificati
 - **ScopeValidator**: MCP scope validation and ACL enforcement
 - **JWTManager**: JWT creation/validation with encryption integration
 - **EncryptionManager**: AES-GCM encryption with key rotation
-- **StorageManager**: Cloudflare KV storage with TTL management
+- **StorageManager**: Cloudflare D1 database with automatic table creation and expiration handling
 - **GitHubClient**: GitHub OAuth API integration
 
 ### Key Design Patterns
@@ -39,15 +39,25 @@ For understanding MCP flow, download https://modelcontextprotocol.io/specificati
 Always run tests before making changes:
 
 ```bash
-npm test
+pnpm test
 ```
+
+### Development Server
+
+Start development server for testing:
+
+```bash
+pnpm run dev
+```
+
+See TESTING.md for comprehensive testing procedures.
 
 ### Test Structure
 
 - Unit tests for all utility classes
 - Integration tests for OAuth flows
 - Security-focused test scenarios
-- Mock utilities in `src/tests/test-utils.ts`
+- Mock utilities for testing OAuth flows
 
 ### Writing New Tests
 
@@ -56,7 +66,7 @@ When adding features:
 1. Create unit tests for new utility functions
 2. Add integration tests for new endpoints
 3. Include security/error scenarios
-4. Use existing mock patterns from `test-utils.ts`
+4. Follow existing test patterns in `src/tests/`
 
 ## Code Style & Standards
 
@@ -98,6 +108,15 @@ All configuration via environment variables:
 3. Write comprehensive tests
 4. Update architecture documentation
 
+### Database Management
+
+The server uses Cloudflare D1 database with automatic table creation:
+
+1. **Development**: Local SQLite database created automatically
+2. **Production**: D1 database specified in `wrangler.jsonc`
+3. **Tables**: Created on first startup in `StorageManager.initialize()`
+4. **Cleanup**: Expired records cleaned automatically via SQL expiration queries
+
 ### Key Rotation
 
 1. Generate new encryption key
@@ -110,7 +129,7 @@ All configuration via environment variables:
 1. Check browser network tab for redirect chains
 2. Verify PKCE challenge/verifier pair generation
 3. Validate JWT token structure and signatures
-4. Review KV storage for session data
+4. Review D1 database tables for session and token data
 
 ## Security Best Practices
 

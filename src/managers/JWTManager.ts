@@ -19,7 +19,24 @@ export class JWTManager {
   }
 
   private async importPublicKey(): Promise<CryptoKey> {
-    return importSPKI(this.publicKeyPem, "RS256");
+    // Import as extractable for JWKS export
+    const keyData = this.publicKeyPem
+      .replace(/-----BEGIN PUBLIC KEY-----/g, "")
+      .replace(/-----END PUBLIC KEY-----/g, "")
+      .replace(/\s/g, "");
+
+    const binaryKey = Uint8Array.from(atob(keyData), (c) => c.charCodeAt(0));
+
+    return crypto.subtle.importKey(
+      "spki",
+      binaryKey,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256",
+      },
+      true, // extractable = true for JWKS export
+      ["verify"],
+    );
   }
 
   async createAccessToken(payload: Omit<AccessToken, "token_type" | "iss" | "exp">): Promise<string> {
