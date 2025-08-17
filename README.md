@@ -17,51 +17,56 @@ See [Architecture.md](./Architecture.md) for detailed architecture documentation
 
 ## Quick Start
 
-### 1. Setup
+### Development
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Create D1 database
-wrangler d1 create mcp-oauth-db
-
-# Update wrangler.jsonc with your database ID
+# Start development server
+pnpm run dev
 ```
 
-### 2. Environment Variables
+Server runs on `http://localhost:8787` with auto-generated test keys.
 
-Copy `.env.example` to `.env` and configure:
+### Staging Deployment (Ready to Use!)
+
+The project includes a pre-configured staging environment:
 
 ```bash
-cp .env.example .env
+# 1. Set up secrets (interactive script)
+./scripts/setup-secrets.sh staging
+
+# 2. Deploy to staging
+pnpm run deploy:staging
+
+# 3. Test deployment
+curl https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/health
 ```
 
-Set the following secrets:
+**Staging URL**: `https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev`
+
+### Production Deployment
 
 ```bash
-# GitHub OAuth App credentials
-wrangler secret put GITHUB_CLIENT_ID
-wrangler secret put GITHUB_CLIENT_SECRET
+# 1. Set up production secrets
+./scripts/setup-secrets.sh prod
 
-# Generate RSA key pair for JWT signing
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
-
-# Set JWT keys (copy the full PEM content including headers)
-wrangler secret put JWT_PRIVATE_KEY
-wrangler secret put JWT_PUBLIC_KEY
-
-# Generate encryption key for refresh tokens
-openssl rand -base64 32 | wrangler secret put REFRESH_ENCRYPTION_KEY
-
-# Set your worker base URL
-wrangler secret put WORKER_BASE_URL
+# 2. Deploy to production
+pnpm run deploy:prod
 ```
 
-### 3. Configure MCP Servers
+## Configuration
 
-Edit `src/config.json` to define your MCP servers and authorized users:
+### GitHub OAuth App Setup
+
+Create a GitHub OAuth App with these settings:
+- **Staging callback**: `https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/auth/github/callback`
+- **Production callback**: `https://mcp-oauth-authorization-server.your-subdomain.workers.dev/auth/github/callback`
+
+### MCP Servers
+
+Configure your MCP servers in `src/config.json` (production) or `src/config.staging.json` (staging):
 
 ```json
 {
@@ -69,7 +74,7 @@ Edit `src/config.json` to define your MCP servers and authorized users:
     "your-domain.com": {
       "your-server": {
         "name": "Your MCP Server",
-        "description": "Description of your server",
+        "description": "Description of what this server provides",
         "allowed_users": ["github-username1", "github-username2"]
       }
     }
@@ -77,18 +82,16 @@ Edit `src/config.json` to define your MCP servers and authorized users:
 }
 ```
 
-### 4. Deploy
+### Required Environment Variables
 
-```bash
-# Deploy to Cloudflare Workers
-pnpm run deploy
-```
-
-### 5. GitHub OAuth App Setup
-
-1. Create a GitHub OAuth App at https://github.com/settings/applications/new
-2. Set Authorization callback URL to: `https://your-worker.workers.dev/auth/github/callback`
-3. Copy Client ID and Secret to your environment variables
+| Variable | Description |
+|----------|-------------|
+| `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app client secret |
+| `JWT_PRIVATE_KEY` | RS256 private key for JWT signing |
+| `JWT_PUBLIC_KEY` | RS256 public key for JWT verification |
+| `REFRESH_ENCRYPTION_KEY` | AES-256 key for refresh token encryption |
+| `WORKER_BASE_URL` | Full URL of the deployed worker |
 
 ## Development
 
@@ -105,6 +108,8 @@ pnpm run type-check
 # Format code
 pnpm run format
 ```
+
+See [TESTING.md](./TESTING.md) for comprehensive testing procedures.
 
 ## Usage
 
@@ -193,6 +198,10 @@ Old tokens remain valid during transition period.
 - Health check endpoint: `GET /health`
 - Cloudflare Workers analytics and logs
 - Error logging for debugging
+
+## Advanced Deployment
+
+For detailed deployment procedures, advanced configuration, and troubleshooting, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Contributing
 
