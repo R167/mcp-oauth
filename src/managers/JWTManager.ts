@@ -1,0 +1,86 @@
+import { SignJWT, jwtVerify, importPKCS8, importSPKI } from "jose";
+import type { AccessToken, RefreshToken } from "../types.js";
+
+export class JWTManager {
+  private privateKey: Promise<CryptoKey>;
+  private publicKey: Promise<CryptoKey>;
+
+  constructor(
+    private readonly privateKeyPem: string,
+    private readonly publicKeyPem: string,
+    private readonly issuer: string,
+  ) {
+    this.privateKey = this.importPrivateKey();
+    this.publicKey = this.importPublicKey();
+  }
+
+  private async importPrivateKey(): Promise<CryptoKey> {
+    return importPKCS8(this.privateKeyPem, "RS256");
+  }
+
+  private async importPublicKey(): Promise<CryptoKey> {
+    return importSPKI(this.publicKeyPem, "RS256");
+  }
+
+  async createAccessToken(payload: Omit<AccessToken, "token_type" | "iss" | "exp">): Promise<string> {
+    const privateKey = await this.privateKey;
+    const now = Math.floor(Date.now() / 1000);
+
+    return new SignJWT({
+      ...payload,
+      token_type: "access",
+    })
+      .setProtectedHeader({ alg: "RS256" })
+      .setIssuer(this.issuer)
+      .setExpirationTime(now + 3600) // 1 hour
+      .setIssuedAt(now)
+      .setNotBefore(now)
+      .sign(privateKey);
+  }
+
+  async createRefreshToken(payload: Omit<RefreshToken, "token_type" | "iss" | "exp">): Promise<string> {
+    const privateKey = await this.privateKey;
+    const now = Math.floor(Date.now() / 1000);
+
+    return new SignJWT({
+      ...payload,
+      token_type: "refresh",
+    })
+      .setProtectedHeader({ alg: "RS256" })
+      .setIssuer(this.issuer)
+      .setExpirationTime(now + 30 * 24 * 3600) // 30 days
+      .setIssuedAt(now)
+      .setNotBefore(now)
+      .sign(privateKey);
+  }
+
+  async verifyToken(token: string): Promise<AccessToken | RefreshToken> {
+    const publicKey = await this.publicKey;
+
+    const { payload } = await jwtVerify(token, publicKey, {
+      issuer: this.issuer,
+    });
+
+    return payload as AccessToken | RefreshToken;
+  }
+
+  async getPublicKey(): Promise<CryptoKey> {
+    return this.publicKey;
+  }
+
+  async getJWKS(): Promise<{ keys: any[] }> {
+    const publicKey = await this.publicKey;
+    const exported = await crypto.subtle.exportKey("jwk", publicKey);
+
+    return {
+      keys: [
+        {
+          ...exported,
+          use: "sig",
+          alg: "RS256",
+          kid: "auth-server-key-1",
+        },
+      ],
+    };
+  }
+}

@@ -1,0 +1,20 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mcp-oauth-authorization-server",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-08-16",
+	"compatibility_flags": ["nodejs_compat"],
+	"d1_databases": [
+		{
+			"binding": "AUTH_DB",
+			"database_name": "mcp-oauth-db",
+			"database_id": "<Add-D1-Database-ID>"
+		}
+	],
+	"observability": {
+		"enabled": true
+	},
+	"dev": {
+		"port": 8787
+	}
+}
