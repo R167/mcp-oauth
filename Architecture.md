@@ -71,11 +71,12 @@ graph TB
     end
 
     subgraph "Storage Layer"
-        KV[Cloudflare KV]
-        KV --> AUTH_CODE[Authorization Codes<br/>TTL: 10 min]
-        KV --> REFRESH_META[Refresh Token Metadata<br/>TTL: 30 days]
-        KV --> SESSIONS[User Sessions<br/>TTL: 30 min]
-        KV --> ENCRYPTION_KEYS[Encryption Key Versions<br/>TTL: 1 year]
+        D1[Cloudflare D1 Database]
+        D1 --> AUTH_CODE[authorization_codes table<br/>expires_at: SQL expiration]
+        D1 --> REFRESH_META[refresh_tokens table<br/>expires_at: SQL expiration]
+        D1 --> SESSIONS[user_sessions table<br/>expires_at: SQL expiration]
+        D1 --> APPROVALS[client_approvals table<br/>expires_at: SQL expiration]
+        D1 --> REVOKED[revoked_tokens table<br/>expires_at: SQL expiration]
     end
 ```
 
@@ -194,7 +195,7 @@ interface RefreshToken {
 graph TB
     subgraph "Cloudflare Edge"
         Worker[OAuth Worker]
-        KV[KV Namespace]
+        D1[D1 Database]
     end
 
     subgraph "External Services"
@@ -203,7 +204,7 @@ graph TB
         Resource[MCP Resource Server]
     end
 
-    Worker <--> KV
+    Worker <--> D1
     Worker <--> GitHub
     Client <--> Worker
     Resource --> Worker
