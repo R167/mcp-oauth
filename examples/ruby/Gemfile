@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+ruby '>= 3.0.0'
+
+# JWT token handling
+gem 'jwt', '~> 2.7'
+
+# HTTP client (for API requests)
+gem 'faraday', '~> 2.7'
+
+# JSON handling (built into Ruby, but explicit for clarity)
+gem 'json', '~> 2.6'
+
+group :development, :test do
+  # Testing framework
+  gem 'rspec', '~> 3.12'
+  
+  # Code formatting
+  gem 'rubocop', '~> 1.56'
+  
+  # Debugging
+  gem 'pry', '~> 0.14'
+end
