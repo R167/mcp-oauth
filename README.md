@@ -163,10 +163,13 @@ Example: `mcp:example.com:github-tools email`
 - `GET /.well-known/jwks.json` - Public keys for token validation
 - `GET /.well-known/oauth-authorization-server` - OAuth metadata
 - `GET /auth/github/callback` - GitHub OAuth callback
+- `POST /validate` - Validate JWT access tokens
+- `POST /admin/revoke` - Revoke access or refresh tokens  
 - `GET /health` - Health check
 
 ### Token Validation
 
+#### Option 1: Server-side Validation (Recommended)
 Resource servers validate access tokens by:
 
 1. Fetching public keys from `/.well-known/jwks.json`
@@ -182,6 +185,36 @@ const payload = await verifyJWT(token, publicKey);
 
 if (payload.aud === 'mcp:example.com:github-tools') {
   // Grant access to user payload.sub (GitHub user ID)
+}
+```
+
+#### Option 2: Using the Validation Endpoint
+For debugging or simple validation, use the `/validate` endpoint:
+
+```bash
+# With Authorization header
+curl -X POST https://auth.mcp.r167.dev/validate \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# With request body
+curl -X POST https://auth.mcp.r167.dev/validate \
+  -H "Content-Type: application/json" \
+  -d '{"token": "YOUR_ACCESS_TOKEN"}'
+```
+
+Response:
+```json
+{
+  "valid": true,
+  "payload": {
+    "token_type": "access",
+    "sub": "12345678",
+    "aud": "mcp:example.com:github-tools",
+    "iss": "https://auth.mcp.r167.dev",
+    "exp": 1698765432,
+    "iat": 1698761832,
+    "email": "user@example.com"
+  }
 }
 ```
 

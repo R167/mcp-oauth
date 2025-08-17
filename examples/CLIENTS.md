@@ -36,6 +36,8 @@ sequenceDiagram
 | `POST /token` | Token exchange endpoint |
 | `GET /.well-known/jwks.json` | Public keys for token validation |
 | `GET /.well-known/oauth-authorization-server` | OAuth server metadata |
+| `POST /validate` | Validate JWT access tokens |
+| `POST /admin/revoke` | Revoke access or refresh tokens |
 | `GET /health` | Health check |
 
 **Base URLs:**
@@ -162,7 +164,84 @@ const decoded = jwt.verify(token, getKey, {
 const userId = decoded.sub;        // GitHub user ID
 const scope = decoded.aud;         // MCP scope
 const userEmail = decoded.email;   // User email (if requested)
+
+## Quick Token Validation
+
+For debugging or simple validation, use the `/validate` endpoint:
+
+### Using Authorization Header
+```bash
+curl -X POST https://auth.mcp.r167.dev/validate \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
+
+### Using Request Body
+```bash
+curl -X POST https://auth.mcp.r167.dev/validate \
+  -H "Content-Type: application/json" \
+  -d '{"token": "YOUR_ACCESS_TOKEN"}'
+```
+
+### Response Format
+```json
+{
+  "valid": true,
+  "payload": {
+    "token_type": "access",
+    "sub": "12345678",
+    "aud": "mcp:example.com:github-tools", 
+    "iss": "https://auth.mcp.r167.dev",
+    "exp": 1698765432,
+    "iat": 1698761832,
+    "email": "user@example.com"
+  }
+}
+```
+
+### Error Response
+```json
+{
+  "valid": false,
+  "error": "Token is expired"
+}
+```
+
+## Token Revocation
+
+Revoke access tokens or refresh tokens using the `/admin/revoke` endpoint:
+
+### Request Format
+```bash
+curl -X POST https://auth.mcp.r167.dev/admin/revoke \
+  -H "Content-Type: application/json" \
+  -d '{"token": "YOUR_TOKEN_HERE"}'
+```
+
+The endpoint accepts both access tokens and refresh tokens in the same format.
+
+### Success Response
+```json
+{
+  "message": "Token revoked successfully"
+}
+```
+
+### Error Responses
+```json
+{
+  "error": "invalid_request",
+  "error_description": "Missing token parameter"
+}
+```
+
+```json
+{
+  "error": "invalid_token",
+  "error_description": "Invalid access token"
+}
+```
+
+**Note**: Once a token is revoked, it will fail validation in both the `/validate` endpoint and in standard JWT verification with revocation checking enabled.
 
 ## Token Structure
 
