@@ -8,7 +8,7 @@
 		{
 			"binding": "AUTH_DB",
 			"database_name": "mcp-oauth-db",
-			"database_id": "<Add-D1-Database-ID>"
+			"database_id": "7d057a3b-e113-4c5b-961d-64cdc1096cff"
 		}
 	],
 	"observability": {
