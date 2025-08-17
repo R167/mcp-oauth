@@ -1,17 +1,10 @@
 {
   "servers": {
     "tailscale.mcp.r167.dev": {
-      "github-tools": {
-        "name": "GitHub Tools",
-        "description": "Access to GitHub repositories and issues",
+      "tailscale-inspector": {
+        "name": "Tailscale Inspector",
+        "description": "Access to Tailscale network information",
         "allowed_users": ["example-user"]
-      }
-    },
-    "mycompany.com": {
-      "internal-api": {
-        "name": "Internal API Access",
-        "description": "Access to internal company APIs",
-        "allowed_users": ["employee1", "employee2"]
       }
     }
   }

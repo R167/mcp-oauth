@@ -101,3 +101,21 @@ export interface ServerConfig {
 export interface Config {
 	servers: Record<string, Record<string, ServerConfig>>;
 }
+
+export interface ClientRegistration {
+	client_id: string;
+	client_name: string;
+	redirect_uris: string[];
+	scope: string;
+	created_at: number;
+	last_used: number;
+	expires_at: number;
+}
+
+export const ClientRegistrationRequestSchema = z.object({
+	client_name: z.string().min(1).max(100),
+	redirect_uris: z.array(z.string().url()).min(1).max(10),
+	scope: z.string(),
+});
+
+export type ClientRegistrationRequest = z.infer<typeof ClientRegistrationRequestSchema>;

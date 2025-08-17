@@ -147,10 +147,38 @@ The script will:
 5. **Authorization Code**: Server returns authorization code to client
 6. **Token Exchange**: Client exchanges code for access/refresh tokens using PKCE verifier
 
+### Client Registration
+
+All OAuth clients must be registered before use via the dynamic client registration endpoint:
+
+```bash
+curl -X POST https://auth.mcp.r167.dev/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_name": "My MCP Client",
+    "redirect_uris": ["https://example.com/callback"],
+    "scope": "mcp:example.com:github-tools email"
+  }'
+```
+
+Response:
+```json
+{
+  "client_id": "mcp_example.com_12345...",
+  "client_name": "My MCP Client", 
+  "redirect_uris": ["https://example.com/callback"],
+  "scope": "mcp:example.com:github-tools email",
+  "expires_at": 1698765432,
+  "registration_client_uri": "https://auth.mcp.r167.dev/client/mcp_example.com_12345..."
+}
+```
+
+**Client Expiration**: Clients expire after 60 days of inactivity. Expiration is refreshed whenever refresh tokens are used.
+
 ### MCP Scope Format
 
 Scopes must follow the pattern: `mcp:<domain>:<server>` where:
-- `domain`: Must match the redirect URI domain
+- `domain`: Must match the redirect URI domain and client registration domain
 - `server`: Must exist in `src/config.json` configuration
 - User must be in the server's `allowed_users` list
 
@@ -164,7 +192,9 @@ Example: `mcp:example.com:github-tools email`
 - `GET /.well-known/oauth-authorization-server` - OAuth metadata
 - `GET /auth/github/callback` - GitHub OAuth callback
 - `POST /validate` - Validate JWT access tokens
-- `POST /admin/revoke` - Revoke access or refresh tokens  
+- `POST /admin/revoke` - Revoke access or refresh tokens
+- `POST /register` - Register new OAuth client (dynamic registration)
+- `GET /client/{client_id}` - Get client information
 - `GET /health` - Health check
 
 ### Token Validation
@@ -235,11 +265,12 @@ Response:
 ### D1 Database
 
 The server automatically creates required tables on first startup:
-- `authorization_codes` - Temporary authorization codes
-- `refresh_tokens` - Refresh token metadata
-- `user_sessions` - User authentication sessions
-- `client_approvals` - Stored consent decisions
-- `revoked_tokens` - Revoked refresh tokens
+- `authorization_codes` - Temporary authorization codes (10 min TTL)
+- `refresh_tokens` - Refresh token metadata (30 day TTL)
+- `user_sessions` - User authentication sessions (30 min TTL)
+- `client_approvals` - Stored consent decisions (30 day TTL)
+- `revoked_tokens` - Revoked refresh tokens (expires with token)
+- `registered_clients` - Dynamic client registrations (60 day inactivity expiration)
 
 ### Key Rotation
 

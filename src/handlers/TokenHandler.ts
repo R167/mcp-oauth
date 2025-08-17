@@ -77,6 +77,17 @@ async function handleAuthorizationCodeGrant(request: TokenRequest, storage: Stor
     );
   }
 
+  // Verify client registration first
+  if (!await storage.isValidClient(request.client_id, request.redirect_uri)) {
+    return Response.json(
+      {
+        error: "invalid_client",
+        error_description: "Invalid client_id or redirect_uri. Client must be registered first.",
+      },
+      { status: 400 },
+    );
+  }
+
   // Verify client and redirect URI
   if (authCode.client_id !== request.client_id || authCode.redirect_uri !== request.redirect_uri) {
     return Response.json(
@@ -137,6 +148,9 @@ async function handleAuthorizationCodeGrant(request: TokenRequest, storage: Stor
     email: authCode.email,
   });
 
+  // Update client last_used timestamp to extend expiration
+  await storage.updateClientLastUsed(authCode.client_id);
+
   return Response.json({
     access_token: accessToken,
     token_type: "Bearer",
@@ -152,6 +166,18 @@ async function handleRefreshTokenGrant(request: TokenRequest, storage: StorageMa
       {
         error: "invalid_request",
         error_description: "Missing refresh token",
+      },
+      { status: 400 },
+    );
+  }
+
+  // Validate client registration
+  const client = await storage.getRegisteredClient(request.client_id);
+  if (!client) {
+    return Response.json(
+      {
+        error: "invalid_client",
+        error_description: "Invalid client_id. Client must be registered first.",
       },
       { status: 400 },
     );
@@ -212,6 +238,11 @@ async function handleRefreshTokenGrant(request: TokenRequest, storage: StorageMa
 
     // Revoke old refresh token
     await storage.revokeRefreshToken(tokenId, payload.exp);
+
+    // Update client last_used timestamp to extend expiration
+    if (request.client_id) {
+      await storage.updateClientLastUsed(request.client_id);
+    }
 
     return Response.json({
       access_token: accessToken,

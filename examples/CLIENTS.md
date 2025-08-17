@@ -38,6 +38,8 @@ sequenceDiagram
 | `GET /.well-known/oauth-authorization-server` | OAuth server metadata |
 | `POST /validate` | Validate JWT access tokens |
 | `POST /admin/revoke` | Revoke access or refresh tokens |
+| `POST /register` | Register new OAuth client |
+| `GET /client/{client_id}` | Get client information |
 | `GET /health` | Health check |
 
 **Base URLs:**
@@ -52,6 +54,88 @@ Scopes follow the pattern: `mcp:<domain>:<server>` where:
 - Additional scope: `email` (optional, provides user email in token)
 
 Example: `mcp:example.com:github-tools email`
+
+## Client Registration (Required)
+
+**All OAuth clients must be registered before use.** The server implements OAuth 2.0 Dynamic Client Registration (RFC 7591).
+
+### Register a New Client
+
+```bash
+curl -X POST https://auth.mcp.r167.dev/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_name": "My MCP Client Application",
+    "redirect_uris": [
+      "https://example.com/oauth/callback",
+      "https://example.com/auth/callback"
+    ],
+    "scope": "mcp:example.com:github-tools email"
+  }'
+```
+
+### Registration Response
+
+```json
+{
+  "client_id": "mcp_example.com_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "client_name": "My MCP Client Application",
+  "redirect_uris": [
+    "https://example.com/oauth/callback",
+    "https://example.com/auth/callback"
+  ],
+  "scope": "mcp:example.com:github-tools email",
+  "expires_at": 1703991600,
+  "registration_client_uri": "https://auth.mcp.r167.dev/client/mcp_example.com_a1b2c3d4..."
+}
+```
+
+### Client Management
+
+#### Get Client Information
+```bash
+curl https://auth.mcp.r167.dev/client/YOUR_CLIENT_ID
+```
+
+#### Client Expiration
+- **Automatic Expiration**: Clients expire after 60 days of inactivity
+- **Activity Tracking**: Expiration is refreshed when refresh tokens are used
+- **Re-registration**: Expired clients must re-register to continue service
+
+### Registration Requirements
+
+1. **Client Name**: Human-readable name (1-100 characters)
+2. **Redirect URIs**: Valid HTTPS URLs (up to 10 URIs)
+   - Must use HTTPS except for localhost/127.x.x.x
+   - Domain must match MCP scope domain
+3. **Scope**: Must include exactly one MCP scope in format `mcp:<domain>:<server>`
+   - Domain must match redirect URI domains
+   - Server must be configured in auth server ACL
+   - Optional: include `email` scope for user email access
+
+### Registration Errors
+
+```json
+{
+  "error": "invalid_request",
+  "error_description": "Invalid client registration request",
+  "details": [...]
+}
+```
+
+```json
+{
+  "error": "invalid_scope", 
+  "error_description": "Invalid MCP scope format. Expected: mcp:<domain>:<server>"
+}
+```
+
+```json
+{
+  "error": "invalid_redirect_uri",
+  "error_description": "Redirect URI domain (app.com) must match MCP scope domain (example.com)"
+}
+```
 
 ## As an OAuth Client (Requesting Access)
 
@@ -72,11 +156,13 @@ function generatePKCE() {
 
 ### 2. Authorization Request
 
+**Important**: Use the `client_id` from your client registration response.
+
 Redirect user to:
 ```
 https://auth.mcp.r167.dev/authorize?
   response_type=code&
-  client_id=your-client-id&
+  client_id=mcp_example.com_a1b2c3d4-e5f6-7890-abcd-ef1234567890&
   redirect_uri=https://example.com/callback&
   scope=mcp:example.com:github-tools email&
   state=random-state-value&

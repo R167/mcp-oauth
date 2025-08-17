@@ -10,6 +10,13 @@
 	"dev": {
 		"port": 8787
 	},
+	"d1_databases": [
+		{
+			"binding": "AUTH_DB",
+			"database_name": "mcp-oauth-db-dev",
+			"database_id": "local-dev-db"
+		}
+	],
 	"env": {
 		"staging": {
 			"name": "mcp-oauth-authorization-server-staging",
@@ -23,7 +30,10 @@
 					"database_name": "mcp-oauth-db-staging",
 					"database_id": "471fa3ec-770b-4bbf-87fb-4f565e3f3c1b"
 				}
-			]
+			],
+			"triggers": {
+				"crons": ["0 2 * * *"]
+			}
 		},
 		"production": {
 			"name": "mcp-oauth-authorization-server",
@@ -42,7 +52,10 @@
 					"database_name": "mcp-oauth-db-prod",
 					"database_id": "75738165-47de-4d12-a466-5f579428ce33"
 				}
-			]
+			],
+			"triggers": {
+				"crons": ["0 2 * * *"]
+			}
 		}
 	}
 }

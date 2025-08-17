@@ -4,6 +4,7 @@ import { AuthorizeHandler } from './handlers/AuthorizeHandler.js';
 import { TokenHandler } from './handlers/TokenHandler.js';
 import { MetadataHandler } from './handlers/MetadataHandler.js';
 import { GitHubCallbackHandler } from './handlers/GitHubCallbackHandler.js';
+import { ClientRegistrationHandler } from './handlers/ClientRegistrationHandler.js';
 import { StorageManager } from './managers/StorageManager.js';
 import { JWTManager } from './managers/JWTManager.js';
 
@@ -21,6 +22,7 @@ app.route('/', AuthorizeHandler);
 app.route('/', TokenHandler);
 app.route('/', MetadataHandler);
 app.route('/', GitHubCallbackHandler);
+app.route('/', ClientRegistrationHandler);
 
 // Health check
 app.get('/health', (c) => {
@@ -41,6 +43,8 @@ app.get('/', (c) => {
 			openid_config: '/.well-known/openid_configuration',
 			validate: '/validate',
 			revoke: '/admin/revoke',
+			register: '/register',
+			client_info: '/client/{client_id}',
 		},
 	});
 });
@@ -173,4 +177,22 @@ app.post('/admin/revoke', async (c) => {
 	}
 });
 
-export default app;
+// Scheduled event handler for daily cleanup
+async function scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+	console.log('Running scheduled cleanup task...');
+	
+	try {
+		const storage = new StorageManager(env.AUTH_DB);
+		await storage.initialize();
+		await storage.cleanupExpired();
+		
+		console.log('Scheduled cleanup completed successfully');
+	} catch (error) {
+		console.error('Scheduled cleanup failed:', error);
+	}
+}
+
+export default {
+	fetch: app.fetch,
+	scheduled,
+};

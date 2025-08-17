@@ -32,6 +32,21 @@ export interface ValidatedToken {
   expiresAt: Date;
 }
 
+export interface ClientRegistrationRequest {
+  client_name: string;
+  redirect_uris: string[];
+  scope: string;
+}
+
+export interface ClientRegistrationResponse {
+  client_id: string;
+  client_name: string;
+  redirect_uris: string[];
+  scope: string;
+  expires_at: number;
+  registration_client_uri: string;
+}
+
 export class MCPOAuthClient {
   constructor(
     private readonly clientId: string,
@@ -40,6 +55,37 @@ export class MCPOAuthClient {
     private readonly scope: string,
     private readonly httpTimeout: number = 30000
   ) {}
+
+  /**
+   * Register client with OAuth server (dynamic client registration)
+   */
+  static async registerClient(
+    baseUrl: string,
+    clientName: string,
+    redirectUris: string[],
+    scope: string
+  ): Promise<ClientRegistrationResponse> {
+    const registrationData: ClientRegistrationRequest = {
+      client_name: clientName,
+      redirect_uris: redirectUris,
+      scope: scope,
+    };
+
+    const response = await fetch(`${baseUrl}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(registrationData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Client registration failed: ${errorText}`);
+    }
+
+    return response.json() as Promise<ClientRegistrationResponse>;
+  }
 
   /**
    * Generate PKCE challenge and verifier pair
@@ -452,31 +498,54 @@ export function createMCPAuthMiddleware(validator: MCPTokenValidator) {
 export async function exampleOAuthClient(): Promise<void> {
   console.log('=== MCP OAuth Client Example ===');
 
-  // Initialize OAuth client
-  const client = new MCPOAuthClient(
-    'your-client-id',
-    'https://auth.mcp.r167.dev',
-    'https://your-app.com/callback',
-    'mcp:your-app.com:github-tools email'
-  );
+  console.log('Step 1: Register OAuth Client');
 
-  // Generate PKCE challenge
-  const pkce = client.generatePKCE();
-  console.log(`Generated PKCE challenge: ${pkce.codeChallenge}`);
+  try {
+    // Register client with the OAuth server
+    const registration = await MCPOAuthClient.registerClient(
+      'https://auth.mcp.r167.dev',
+      'My TypeScript MCP Application',
+      ['https://your-app.com/callback'],
+      'mcp:your-app.com:github-tools email'
+    );
 
-  // Generate random state for CSRF protection
-  const state = crypto.randomBytes(16).toString('base64url');
+    console.log('Client registered successfully!');
+    console.log(`Client ID: ${registration.client_id}`);
+    console.log(`Expires at: ${new Date(registration.expires_at * 1000)}`);
+    console.log();
 
-  // Get authorization URL
-  const authUrl = client.getAuthorizationUrl(state, pkce);
-  console.log('Visit this URL to authorize:');
-  console.log(authUrl);
-  console.log();
+    console.log('Step 2: Initialize OAuth Flow');
 
-  // After user authorizes and returns with code...
-  console.log('After authorization, exchange code for tokens:');
-  console.log('const tokens = await client.exchangeCodeForTokens(authorizationCode, pkce);');
-  console.log();
+    // Initialize OAuth client with the registered client ID
+    const client = new MCPOAuthClient(
+      registration.client_id,
+      'https://auth.mcp.r167.dev',
+      'https://your-app.com/callback',
+      'mcp:your-app.com:github-tools email'
+    );
+
+    // Generate PKCE challenge
+    const pkce = client.generatePKCE();
+    console.log(`Generated PKCE challenge: ${pkce.codeChallenge}`);
+
+    // Generate random state for CSRF protection
+    const state = crypto.randomBytes(16).toString('base64url');
+
+    // Get authorization URL
+    const authUrl = client.getAuthorizationUrl(state, pkce);
+    console.log('Visit this URL to authorize:');
+    console.log(authUrl);
+    console.log();
+
+    // After user authorizes and returns with code...
+    console.log('After authorization, exchange code for tokens:');
+    console.log('const tokens = await client.exchangeCodeForTokens(authorizationCode, pkce);');
+    console.log();
+
+  } catch (error) {
+    console.error('Client registration failed:', error.message);
+    return;
+  }
 
   // Example token refresh
   console.log('To refresh tokens:');

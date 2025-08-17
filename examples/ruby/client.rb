@@ -23,6 +23,33 @@ class MCPOAuthClient
     @http_timeout = 30
   end
 
+  # Register client with OAuth server (dynamic client registration)
+  def self.register_client(base_url, client_name, redirect_uris, scope)
+    uri = URI("#{base_url}/register")
+    
+    request_data = {
+      client_name: client_name,
+      redirect_uris: redirect_uris,
+      scope: scope
+    }
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == 'https'
+    http.read_timeout = 30
+    
+    request = Net::HTTP::Post.new(uri.path)
+    request['Content-Type'] = 'application/json'
+    request.body = request_data.to_json
+    
+    response = http.request(request)
+    
+    unless response.code == '201'
+      raise "Client registration failed: #{response.body}"
+    end
+    
+    JSON.parse(response.body, symbolize_names: true)
+  end
+
   # PKCE challenge and verifier generation
   def generate_pkce
     code_verifier = Base64.urlsafe_encode64(SecureRandom.random_bytes(32), padding: false)
@@ -289,9 +316,32 @@ end
 def example_oauth_client
   puts "=== MCP OAuth Client Example ==="
   
-  # Initialize OAuth client
+  puts "Step 1: Register OAuth Client"
+  
+  # Register client with the OAuth server
+  begin
+    registration = MCPOAuthClient.register_client(
+      'https://auth.mcp.r167.dev',
+      'My Ruby MCP Application',
+      ['https://your-app.com/callback'],
+      'mcp:your-app.com:github-tools email'
+    )
+    
+    puts "Client registered successfully!"
+    puts "Client ID: #{registration[:client_id]}"
+    puts "Expires at: #{Time.at(registration[:expires_at])}"
+    puts
+    
+  rescue => e
+    puts "Client registration failed: #{e.message}"
+    return
+  end
+  
+  puts "Step 2: Initialize OAuth Flow"
+  
+  # Initialize OAuth client with the registered client ID
   client = MCPOAuthClient.new(
-    'your-client-id',
+    registration[:client_id],
     'https://auth.mcp.r167.dev',
     'https://your-app.com/callback',
     'mcp:your-app.com:github-tools email'

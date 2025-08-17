@@ -48,6 +48,23 @@ type MCPClaims struct {
 	jwt.RegisteredClaims
 }
 
+// ClientRegistrationRequest represents a dynamic client registration request
+type ClientRegistrationRequest struct {
+	ClientName   string   `json:"client_name"`
+	RedirectURIs []string `json:"redirect_uris"`
+	Scope        string   `json:"scope"`
+}
+
+// ClientRegistrationResponse represents the response from client registration
+type ClientRegistrationResponse struct {
+	ClientID               string   `json:"client_id"`
+	ClientName             string   `json:"client_name"`
+	RedirectURIs          []string `json:"redirect_uris"`
+	Scope                 string   `json:"scope"`
+	ExpiresAt             int64    `json:"expires_at"`
+	RegistrationClientURI string   `json:"registration_client_uri"`
+}
+
 // NewMCPOAuthClient creates a new OAuth client
 func NewMCPOAuthClient(clientID, baseURL, redirectURI, scope string) *MCPOAuthClient {
 	return &MCPOAuthClient{
@@ -80,6 +97,38 @@ func GeneratePKCE() (*PKCEChallenge, error) {
 		CodeVerifier:  codeVerifier,
 		CodeChallenge: codeChallenge,
 	}, nil
+}
+
+// RegisterClient performs dynamic client registration with the OAuth server
+func RegisterClient(baseURL, clientName string, redirectURIs []string, scope string) (*ClientRegistrationResponse, error) {
+	regRequest := &ClientRegistrationRequest{
+		ClientName:   clientName,
+		RedirectURIs: redirectURIs,
+		Scope:        scope,
+	}
+
+	jsonData, err := json.Marshal(regRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal registration request: %w", err)
+	}
+
+	resp, err := http.Post(baseURL+"/register", "application/json", strings.NewReader(string(jsonData)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to register client: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("client registration failed: %s", string(body))
+	}
+
+	var regResponse ClientRegistrationResponse
+	if err := json.NewDecoder(resp.Body).Decode(&regResponse); err != nil {
+		return nil, fmt.Errorf("failed to decode registration response: %w", err)
+	}
+
+	return &regResponse, nil
 }
 
 // GetAuthorizationURL builds the OAuth authorization URL
@@ -259,9 +308,30 @@ func (v *TokenValidator) ValidateToken(tokenString string) (*MCPClaims, error) {
 
 // Example usage for MCP client
 func ExampleMCPClient() {
-	// Initialize OAuth client
+	fmt.Println("Step 1: Register OAuth Client")
+	
+	// Register client with the OAuth server
+	registration, err := RegisterClient(
+		"https://auth.mcp.r167.dev",
+		"My MCP Application",
+		[]string{"https://your-app.com/callback"},
+		"mcp:your-app.com:github-tools email",
+	)
+	if err != nil {
+		fmt.Printf("Client registration failed: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Client registered successfully!\n")
+	fmt.Printf("Client ID: %s\n", registration.ClientID)
+	fmt.Printf("Expires at: %v\n", time.Unix(registration.ExpiresAt, 0))
+	fmt.Println()
+	
+	fmt.Println("Step 2: Initialize OAuth Flow")
+	
+	// Initialize OAuth client with the registered client ID
 	client := NewMCPOAuthClient(
-		"your-client-id",
+		registration.ClientID,
 		"https://auth.mcp.r167.dev",
 		"https://your-app.com/callback",
 		"mcp:your-app.com:github-tools email",

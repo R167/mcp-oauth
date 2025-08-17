@@ -28,6 +28,17 @@ app.get("/authorize", async (c) => {
     const storage = new StorageManager(c.env.AUTH_DB);
     await storage.initialize();
 
+    // Validate client registration
+    if (!await storage.isValidClient(request.client_id, request.redirect_uri)) {
+      return c.json(
+        {
+          error: "invalid_client",
+          error_description: "Invalid client_id or redirect_uri. Client must be registered first.",
+        },
+        400,
+      );
+    }
+
     // Validate scope format and get MCP scope
     const scopeValidator = new ScopeValidator();
     const scopeFormat = scopeValidator.validateScopeFormat(request.scope);
