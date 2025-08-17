@@ -4,7 +4,7 @@
       "tailscale-inspector": {
         "name": "Tailscale Inspector",
         "description": "Access to Tailscale network information",
-        "allowed_users": ["example-user"]
+        "allowed_users": ["R167"]
       }
     }
   }
