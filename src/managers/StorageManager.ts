@@ -4,59 +4,30 @@ export class StorageManager {
   constructor(private readonly db: D1Database) {}
 
   async initialize(): Promise<void> {
-    // Create tables if they don't exist
-    await this.db.exec(`
-			CREATE TABLE IF NOT EXISTS authorization_codes (
-				code TEXT PRIMARY KEY,
-				client_id TEXT NOT NULL,
-				redirect_uri TEXT NOT NULL,
-				scope TEXT NOT NULL,
-				user_id TEXT NOT NULL,
-				code_challenge TEXT NOT NULL,
-				expires_at INTEGER NOT NULL,
-				email TEXT,
-				created_at INTEGER DEFAULT (strftime('%s', 'now'))
-			);
+    // Create tables if they don't exist - using prepare() for better local compatibility
+    const statements = [
+      "CREATE TABLE IF NOT EXISTS authorization_codes (code TEXT PRIMARY KEY, client_id TEXT NOT NULL, redirect_uri TEXT NOT NULL, scope TEXT NOT NULL, user_id TEXT NOT NULL, code_challenge TEXT NOT NULL, expires_at INTEGER NOT NULL, email TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now')))",
+      "CREATE TABLE IF NOT EXISTS refresh_tokens (token_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, client_id TEXT NOT NULL, scope TEXT NOT NULL, expires_at INTEGER NOT NULL, email TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now')))",
+      "CREATE TABLE IF NOT EXISTS user_sessions (session_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, email TEXT, name TEXT, expires_at INTEGER NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')))",
+      "CREATE TABLE IF NOT EXISTS client_approvals (user_id TEXT NOT NULL, client_id TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')), PRIMARY KEY (user_id, client_id))",
+      "CREATE TABLE IF NOT EXISTS revoked_tokens (token_id TEXT PRIMARY KEY, expires_at INTEGER NOT NULL, created_at INTEGER DEFAULT (strftime('%s', 'now')))",
+      "CREATE INDEX IF NOT EXISTS idx_auth_codes_expires ON authorization_codes(expires_at)",
+      "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at)",
+      "CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions(expires_at)",
+      "CREATE INDEX IF NOT EXISTS idx_client_approvals_expires ON client_approvals(expires_at)",
+      "CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires ON revoked_tokens(expires_at)",
+    ];
 
-			CREATE TABLE IF NOT EXISTS refresh_tokens (
-				token_id TEXT PRIMARY KEY,
-				user_id TEXT NOT NULL,
-				client_id TEXT NOT NULL,
-				scope TEXT NOT NULL,
-				expires_at INTEGER NOT NULL,
-				email TEXT,
-				created_at INTEGER DEFAULT (strftime('%s', 'now'))
-			);
-
-			CREATE TABLE IF NOT EXISTS user_sessions (
-				session_id TEXT PRIMARY KEY,
-				user_id TEXT NOT NULL,
-				email TEXT,
-				name TEXT,
-				expires_at INTEGER NOT NULL,
-				created_at INTEGER DEFAULT (strftime('%s', 'now'))
-			);
-
-			CREATE TABLE IF NOT EXISTS client_approvals (
-				user_id TEXT NOT NULL,
-				client_id TEXT NOT NULL,
-				expires_at INTEGER NOT NULL,
-				created_at INTEGER DEFAULT (strftime('%s', 'now')),
-				PRIMARY KEY (user_id, client_id)
-			);
-
-			CREATE TABLE IF NOT EXISTS revoked_tokens (
-				token_id TEXT PRIMARY KEY,
-				expires_at INTEGER NOT NULL,
-				created_at INTEGER DEFAULT (strftime('%s', 'now'))
-			);
-
-			CREATE INDEX IF NOT EXISTS idx_auth_codes_expires ON authorization_codes(expires_at);
-			CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
-			CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions(expires_at);
-			CREATE INDEX IF NOT EXISTS idx_client_approvals_expires ON client_approvals(expires_at);
-			CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires ON revoked_tokens(expires_at);
-		`);
+    for (const statement of statements) {
+      try {
+        await this.db.prepare(statement).run();
+      } catch (error) {
+        // Ignore errors for indexes that already exist
+        if (!error.message?.includes("already exists")) {
+          console.error("Failed to create table/index:", statement, error);
+        }
+      }
+    }
   }
 
   // Authorization Codes (10 minute TTL)
