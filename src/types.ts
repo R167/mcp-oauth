@@ -7,7 +7,7 @@ export interface Env {
 	JWT_PRIVATE_KEY: string;
 	JWT_PUBLIC_KEY: string;
 	REFRESH_ENCRYPTION_KEY: string;
-	WORKER_BASE_URL: string;
+	WORKER_BASE_URL?: string;
 }
 
 export const OAuthErrorSchema = z.object({

@@ -8,7 +8,13 @@
 		{
 			"binding": "AUTH_DB",
 			"database_name": "mcp-oauth-db-prod",
-			"database_id": "7d057a3b-e113-4c5b-961d-64cdc1096cff"
+			"database_id": "75738165-47de-4d12-a466-5f579428ce33"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "auth.mcp.r167.dev",
+			"custom_domain": true
 		}
 	],
 	"observability": {
@@ -17,9 +23,15 @@
 	"dev": {
 		"port": 8787
 	},
+	"vars": {
+		"WORKER_BASE_URL": "https://auth.mcp.r167.dev"
+	},
 	"env": {
 		"staging": {
 			"name": "mcp-oauth-authorization-server-staging",
+			"vars": {
+				"WORKER_BASE_URL": "https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev"
+			},
 			"d1_databases": [
 				{
 					"binding": "AUTH_DB",

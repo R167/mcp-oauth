@@ -34,8 +34,8 @@ openssl rand -base64 32
    - **Application name**: `MCP OAuth Server (Staging)` / `MCP OAuth Server (Production)`
    - **Homepage URL**: Your organization's URL
    - **Authorization callback URL**: 
-     - Staging: `https://mcp-oauth-authorization-server-staging.your-subdomain.workers.dev/auth/github/callback`
-     - Production: `https://mcp-oauth-authorization-server.your-subdomain.workers.dev/auth/github/callback`
+     - Staging: `https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/auth/github/callback`
+     - Production: `https://auth.mcp.r167.dev/auth/github/callback`
 4. Save Client ID and Client Secret
 
 ## Deployment Environments
@@ -44,6 +44,12 @@ openssl rand -base64 32
 
 #### 1. Set Staging Secrets
 
+Use the automated script:
+```bash
+./scripts/setup-secrets.sh staging
+```
+
+Or set manually:
 ```bash
 # GitHub OAuth credentials
 wrangler secret put GITHUB_CLIENT_ID --env staging
@@ -56,9 +62,7 @@ wrangler secret put JWT_PUBLIC_KEY --env staging
 # Refresh token encryption key
 wrangler secret put REFRESH_ENCRYPTION_KEY --env staging
 
-# Worker base URL (update with your actual staging URL)
-wrangler secret put WORKER_BASE_URL --env staging
-# Value: https://mcp-oauth-authorization-server-staging.your-subdomain.workers.dev
+# Note: WORKER_BASE_URL is now set as environment variable in wrangler.jsonc
 ```
 
 #### 2. Deploy to Staging
@@ -89,6 +93,12 @@ Update `src/config.staging.json` with your staging MCP servers:
 
 #### 1. Set Production Secrets
 
+Use the automated script:
+```bash
+./scripts/setup-secrets.sh prod
+```
+
+Or set manually:
 ```bash
 # Use different GitHub OAuth app for production
 wrangler secret put GITHUB_CLIENT_ID
@@ -101,9 +111,7 @@ wrangler secret put JWT_PUBLIC_KEY
 # Use different encryption key for production
 wrangler secret put REFRESH_ENCRYPTION_KEY
 
-# Production worker URL
-wrangler secret put WORKER_BASE_URL
-# Value: https://mcp-oauth-authorization-server.your-subdomain.workers.dev
+# Note: WORKER_BASE_URL is now set as environment variable in wrangler.jsonc
 ```
 
 #### 2. Deploy to Production
@@ -156,7 +164,9 @@ Update `src/config.json` (production) and `src/config.staging.json` (staging) wi
 }
 ```
 
-### Environment Variables
+### Configuration
+
+#### Cloudflare Secrets
 
 All environments require these secrets:
 
@@ -167,14 +177,19 @@ All environments require these secrets:
 | `JWT_PRIVATE_KEY` | RS256 private key for JWT signing | `-----BEGIN PRIVATE KEY-----\n...` |
 | `JWT_PUBLIC_KEY` | RS256 public key for JWT verification | `-----BEGIN PUBLIC KEY-----\n...` |
 | `REFRESH_ENCRYPTION_KEY` | AES-256 key for refresh token encryption | `base64-encoded-key` |
-| `WORKER_BASE_URL` | Full URL of the deployed worker | `https://...workers.dev` |
+
+#### Environment Variables
+
+| Variable | Description | Set in | Example |
+|----------|-------------|--------|--------|
+| `WORKER_BASE_URL` | Full URL of the deployed worker | `wrangler.jsonc` (`vars`) + `.dev.vars` (dev) | `https://auth.mcp.r167.dev` |
 
 ## Verification
 
 ### 1. Health Check
 
 ```bash
-curl https://your-worker-url.workers.dev/health
+curl https://auth.mcp.r167.dev/health
 ```
 
 Expected response:
@@ -188,7 +203,7 @@ Expected response:
 ### 2. OAuth Discovery
 
 ```bash
-curl https://your-worker-url.workers.dev/.well-known/oauth-authorization-server
+curl https://auth.mcp.r167.dev/.well-known/oauth-authorization-server
 ```
 
 Should return OAuth server metadata with correct URLs.
@@ -196,7 +211,7 @@ Should return OAuth server metadata with correct URLs.
 ### 3. JWKS Endpoint
 
 ```bash
-curl https://your-worker-url.workers.dev/.well-known/jwks.json
+curl https://auth.mcp.r167.dev/.well-known/jwks.json
 ```
 
 Should return the public key in JWK format.

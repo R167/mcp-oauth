@@ -46,6 +46,8 @@ curl https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/health
 
 **Staging URL**: `https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev`
 
+**Note**: You must configure secrets before the server will work properly.
+
 ### Production Deployment
 
 ```bash
@@ -56,13 +58,15 @@ curl https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/health
 pnpm run deploy:prod
 ```
 
+**Production URL**: `https://auth.mcp.r167.dev`
+
 ## Configuration
 
 ### GitHub OAuth App Setup
 
 Create a GitHub OAuth App with these settings:
 - **Staging callback**: `https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev/auth/github/callback`
-- **Production callback**: `https://mcp-oauth-authorization-server.your-subdomain.workers.dev/auth/github/callback`
+- **Production callback**: `https://auth.mcp.r167.dev/auth/github/callback`
 
 ### MCP Servers
 
@@ -82,8 +86,9 @@ Configure your MCP servers in `src/config.json` (production) or `src/config.stag
 }
 ```
 
-### Required Environment Variables
+### Required Configuration
 
+#### Cloudflare Secrets
 | Variable | Description |
 |----------|-------------|
 | `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
@@ -91,7 +96,11 @@ Configure your MCP servers in `src/config.json` (production) or `src/config.stag
 | `JWT_PRIVATE_KEY` | RS256 private key for JWT signing |
 | `JWT_PUBLIC_KEY` | RS256 public key for JWT verification |
 | `REFRESH_ENCRYPTION_KEY` | AES-256 key for refresh token encryption |
-| `WORKER_BASE_URL` | Full URL of the deployed worker |
+
+#### Environment Variables
+| Variable | Description | Set in |
+|----------|-------------|--------|
+| `WORKER_BASE_URL` | Full URL of the deployed worker | `wrangler.jsonc` |
 
 ## Development
 
@@ -109,7 +118,19 @@ pnpm run type-check
 pnpm run format
 ```
 
-See [TESTING.md](./TESTING.md) for comprehensive testing procedures.
+## Automated Secret Setup
+
+Use the provided script to easily configure all required secrets:
+
+```bash
+# For staging environment
+./scripts/setup-secrets.sh staging
+
+# For production environment  
+./scripts/setup-secrets.sh prod
+```
+
+The script will prompt you for all required values and set them automatically.
 
 ## Usage
 
@@ -142,7 +163,7 @@ Example: `mcp:example.com:github-tools email`
 
 ### Token Validation
 
-Resource servers can validate access tokens by:
+Resource servers validate access tokens by:
 
 1. Fetching public keys from `/.well-known/jwks.json`
 2. Verifying JWT signature with RS256
@@ -156,9 +177,11 @@ const publicKey = await fetchPublicKey();
 const payload = await verifyJWT(token, publicKey);
 
 if (payload.aud === 'mcp:example.com:github-tools') {
-  // Grant access to user payload.sub
+  // Grant access to user payload.sub (GitHub user ID)
 }
 ```
+
+**Note**: The system uses D1 database for state storage, not KV storage.
 
 ## Security Features
 

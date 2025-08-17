@@ -129,7 +129,7 @@ graph LR
 
 ### Token Specifications
 
-NOTE: these are ideas on implementation and the ideal solution may differ
+The actual implemented token structures match these specifications
 
 #### Access Token Structure
 

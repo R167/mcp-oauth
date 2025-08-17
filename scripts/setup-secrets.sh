@@ -46,17 +46,16 @@ echo "Enter the base64-encoded refresh token encryption key:"
 read -r REFRESH_ENCRYPTION_KEY
 echo "$REFRESH_ENCRYPTION_KEY" | wrangler secret put REFRESH_ENCRYPTION_KEY $ENV_FLAG
 
-echo "🌐 Setting worker base URL..."
-if [ "$ENVIRONMENT" = "staging" ]; then
-    DEFAULT_URL="https://mcp-oauth-authorization-server-staging.your-subdomain.workers.dev"
-else
-    DEFAULT_URL="https://mcp-oauth-authorization-server.your-subdomain.workers.dev"
-fi
+echo "ℹ️  WORKER_BASE_URL is configured as environment variable:"
+echo "   Development: http://localhost:8787 (in .dev.vars)"
+echo "   Staging: https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev (in wrangler.jsonc)"
+echo "   Production: https://auth.mcp.r167.dev (in wrangler.jsonc)"
 
-echo "Enter the worker base URL [$DEFAULT_URL]:"
-read -r WORKER_BASE_URL
-WORKER_BASE_URL=${WORKER_BASE_URL:-$DEFAULT_URL}
-echo "$WORKER_BASE_URL" | wrangler secret put WORKER_BASE_URL $ENV_FLAG
+if [ "$ENVIRONMENT" = "staging" ]; then
+    WORKER_BASE_URL="https://mcp-oauth-authorization-server-staging.wmdurand.workers.dev"
+else
+    WORKER_BASE_URL="https://auth.mcp.r167.dev"
+fi
 
 echo "✅ All secrets have been set for $ENVIRONMENT environment!"
 echo ""

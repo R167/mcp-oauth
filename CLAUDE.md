@@ -50,7 +50,7 @@ Start development server for testing:
 pnpm run dev
 ```
 
-See TESTING.md for comprehensive testing procedures.
+Use automated secret setup with `./scripts/setup-secrets.sh staging` for staging environment.
 
 ### Test Structure
 
@@ -84,22 +84,26 @@ When adding features:
 - Use constant-time comparisons for secrets
 - Implement proper error handling without information leakage
 
-### Environment Variables
+### Configuration
 
-All configuration via environment variables:
-
+#### Cloudflare Secrets
 - `GITHUB_CLIENT_ID/SECRET` - GitHub OAuth app
 - `JWT_PRIVATE_KEY/PUBLIC_KEY` - RS256 key pair
 - `REFRESH_ENCRYPTION_KEY` - AES encryption key
-- `WORKER_BASE_URL` - Authorization server base URL
+
+#### Environment Variables
+- `WORKER_BASE_URL` - Authorization server base URL (set in `wrangler.jsonc`)
+
+Use `./scripts/setup-secrets.sh [staging|prod]` to configure all secrets automatically.
 
 ## Common Tasks
 
 ### Adding New MCP Servers
 
-1. Update `src/config.json` with new server configuration
-2. Add allowed users list
+1. Update `src/config.json` (production) or `src/config.staging.json` (staging) with new server configuration
+2. Add allowed users list in the `allowed_users` array
 3. Test scope validation with new domain/server combination
+4. Ensure the domain matches where the MCP client will be hosted
 
 ### Implementing New Endpoints
 
