@@ -14,7 +14,8 @@
 		{
 			"binding": "AUTH_DB",
 			"database_name": "mcp-oauth-db-dev",
-			"database_id": "local-dev-db"
+			"database_id": "local-dev-db",
+			"migrations_dir": "migrations"
 		}
 	],
 	"env": {
@@ -28,7 +29,8 @@
 				{
 					"binding": "AUTH_DB",
 					"database_name": "mcp-oauth-db-staging",
-					"database_id": "471fa3ec-770b-4bbf-87fb-4f565e3f3c1b"
+					"database_id": "471fa3ec-770b-4bbf-87fb-4f565e3f3c1b",
+					"migrations_dir": "migrations"
 				}
 			],
 			"triggers": {
@@ -50,7 +52,8 @@
 				{
 					"binding": "AUTH_DB",
 					"database_name": "mcp-oauth-db-prod",
-					"database_id": "75738165-47de-4d12-a466-5f579428ce33"
+					"database_id": "75738165-47de-4d12-a466-5f579428ce33",
+					"migrations_dir": "migrations"
 				}
 			],
 			"triggers": {

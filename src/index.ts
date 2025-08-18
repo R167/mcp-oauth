@@ -10,12 +10,7 @@ import { JWTManager } from './managers/JWTManager.js';
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Initialize database on first request
-app.use('*', async (c, next) => {
-	const storage = new StorageManager(c.env.AUTH_DB);
-	await storage.initialize();
-	await next();
-});
+// Database migrations are handled by D1's built-in migration system
 
 // Mount OAuth handlers
 app.route('/', AuthorizeHandler);
@@ -183,7 +178,6 @@ async function scheduled(event: ScheduledController, env: Env, ctx: ExecutionCon
 	
 	try {
 		const storage = new StorageManager(env.AUTH_DB);
-		await storage.initialize();
 		await storage.cleanupExpired();
 		
 		console.log('Scheduled cleanup completed successfully');
