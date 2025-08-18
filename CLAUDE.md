@@ -8,9 +8,9 @@ This is a production-ready OAuth 2.1/OIDC authorization server built on Cloudfla
 
 ## Architecture
 
-@./Architecture.md
+Refer to: Architecture.md
 
-For understanding MCP flow, download https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization.md
+For understanding MCP flow, download https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization.md as needed.
 
 ## Architecture Understanding
 
@@ -33,6 +33,8 @@ For understanding MCP flow, download https://modelcontextprotocol.io/specificati
 - **PKCE enforcement**: All authorization flows require PKCE for security
 
 ## Testing Guidelines
+
+The project uses pnpm for package management.
 
 ### Running Tests
 
@@ -87,11 +89,13 @@ When adding features:
 ### Configuration
 
 #### Cloudflare Secrets
+
 - `GITHUB_CLIENT_ID/SECRET` - GitHub OAuth app
 - `JWT_PRIVATE_KEY/PUBLIC_KEY` - RS256 key pair
 - `REFRESH_ENCRYPTION_KEY` - AES encryption key
 
 #### Environment Variables
+
 - `WORKER_BASE_URL` - Authorization server base URL (set in `wrangler.jsonc`)
 
 Use `./scripts/setup-secrets.sh [staging|prod]` to configure all secrets automatically.
@@ -118,7 +122,7 @@ The server uses Cloudflare D1 database with automatic table creation:
 
 1. **Development**: Local SQLite database created automatically
 2. **Production**: D1 database specified in `wrangler.jsonc`
-3. **Tables**: Created on first startup in `StorageManager.initialize()`
+3. **Tables**: Managed using D1 migrations
 4. **Cleanup**: Expired records cleaned automatically via SQL expiration queries
 
 ### Key Rotation

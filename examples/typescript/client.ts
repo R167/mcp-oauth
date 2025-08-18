@@ -543,7 +543,7 @@ export async function exampleOAuthClient(): Promise<void> {
     console.log();
 
   } catch (error) {
-    console.error('Client registration failed:', error.message);
+    console.error('Client registration failed:', error instanceof Error ? error.message : String(error));
     return;
   }
 

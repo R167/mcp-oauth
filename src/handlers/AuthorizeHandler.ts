@@ -26,10 +26,9 @@ app.get("/authorize", async (c) => {
 
     const request = parseResult.data;
     const storage = new StorageManager(c.env.AUTH_DB);
-    await storage.initialize();
 
     // Validate client registration
-    if (!await storage.isValidClient(request.client_id, request.redirect_uri)) {
+    if (!(await storage.isValidClient(request.client_id, request.redirect_uri))) {
       return c.json(
         {
           error: "invalid_client",
@@ -125,7 +124,6 @@ app.post("/authorize", async (c) => {
     }
 
     const storage = new StorageManager(c.env.AUTH_DB);
-    await storage.initialize();
 
     const session = await storage.getUserSession(sessionId);
     if (!session) {

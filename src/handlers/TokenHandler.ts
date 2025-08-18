@@ -25,7 +25,6 @@ app.post("/token", async (c) => {
 
     const request = parseResult.data;
     const storage = new StorageManager(c.env.AUTH_DB);
-    await storage.initialize();
 
     const jwtManager = new JWTManager(c.env.JWT_PRIVATE_KEY, c.env.JWT_PUBLIC_KEY, c.env.WORKER_BASE_URL || "");
 
@@ -78,7 +77,7 @@ async function handleAuthorizationCodeGrant(request: TokenRequest, storage: Stor
   }
 
   // Verify client registration first
-  if (!await storage.isValidClient(request.client_id, request.redirect_uri)) {
+  if (!(await storage.isValidClient(request.client_id, request.redirect_uri))) {
     return Response.json(
       {
         error: "invalid_client",

@@ -33,7 +33,6 @@ app.get("/auth/github/callback", async (c) => {
     }
 
     const storage = new StorageManager(c.env.AUTH_DB);
-    await storage.initialize();
 
     // Get session data
     const session = await storage.getUserSession(state);
